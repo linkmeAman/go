@@ -1,0 +1,59 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+/vendor/
+
+# Go workspace file
+go.work
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+
+# Environment files
+.env
+*.env
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Binary files
+bin/
+dist/
+
+# Cache directories
+cache/
+.cache/
+tmp/
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+/pkg/
+/go/pkg/
+go1.21.0.linux-amd64.tar.gz
+
+~/.vscode-server-insiders/
