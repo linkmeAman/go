@@ -11,7 +11,7 @@ MAIN_PATH=cmd/api/main.go
 all: test build
 
 build:
-	$(GOBUILD) -o $(BINARY_NAME) $(MAIN_PATH)
+	cd cmd/api && $(GOBUILD) -o ../../$(BINARY_NAME)
 
 test:
 	$(GOTEST) -v ./... -cover
@@ -21,7 +21,7 @@ clean:
 	rm -f $(BINARY_NAME)
 
 run:
-	$(GOCMD) run $(MAIN_PATH)
+	cd cmd/api && $(GOCMD) run .
 
 lint:
 	golangci-lint run

@@ -78,17 +78,30 @@ docker-compose ps
 
 3. Run migrations and start server:
 ```bash
-# Create database
-psql -U postgres -c "CREATE DATABASE saas_billing;"
+# Create database and run migrations (if using Docker)
+docker exec -i $(docker-compose ps -q postgres) psql -U postgres -c "CREATE DATABASE saas_billing;"
+docker exec -i $(docker-compose ps -q postgres) psql -U postgres -d saas_billing -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
+docker exec -i $(docker-compose ps -q postgres) psql -U postgres -d saas_billing -f migrations/001_initial_schema.sql
 
-# Run database migrations
+# OR if PostgreSQL is installed locally
+psql -U postgres -c "CREATE DATABASE saas_billing;"
+psql -U postgres -d saas_billing -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
 psql -U postgres -d saas_billing -f migrations/001_initial_schema.sql
 
-# Start the server
-go run cmd/api/main.go
+# Build and run the server (recommended)
+make build   # Build the binary
+./saas-billing   # Run the server
+
+# Alternative: Run directly (for development)
+make run
+
+# One-command setup with Docker (recommended)
+make setup   # This will start Docker services and run migrations
 ```
 
 The API will be available at http://localhost:8080
+
+Note: The `go run` command might not work directly from the root directory due to module dependencies. Using the build command is more reliable for production use.
 
 ## Project Structure
 
