@@ -2,6 +2,33 @@
 
 echo "🚀 Starting SaaS Billing System..."
 
+# Check Go version and install Go 1.21 if needed
+REQUIRED_GO_VERSION="1.21"
+CURRENT_GO_VERSION=$(go version 2>/dev/null | grep -oP "go\K[0-9]+\.[0-9]+")
+
+if [ -z "$CURRENT_GO_VERSION" ] || [ "$CURRENT_GO_VERSION" != "$REQUIRED_GO_VERSION" ]; then
+    echo "📥 Installing Go $REQUIRED_GO_VERSION..."
+    # Download and install Go 1.21
+    wget -q https://go.dev/dl/go${REQUIRED_GO_VERSION}.0.linux-amd64.tar.gz
+    sudo rm -rf /usr/local/go
+    sudo tar -C /usr/local -xzf go${REQUIRED_GO_VERSION}.0.linux-amd64.tar.gz
+    rm go${REQUIRED_GO_VERSION}.0.linux-amd64.tar.gz
+    
+    # Add Go to PATH if not already there
+    if ! grep -q "/usr/local/go/bin" ~/.bashrc; then
+        echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+    fi
+    export PATH=$PATH:/usr/local/go/bin
+    
+    # Verify installation
+    NEW_GO_VERSION=$(/usr/local/go/bin/go version | grep -oP "go\K[0-9]+\.[0-9]+")
+    if [ "$NEW_GO_VERSION" != "$REQUIRED_GO_VERSION" ]; then
+        echo "❌ Failed to install Go $REQUIRED_GO_VERSION"
+        exit 1
+    fi
+    echo "✅ Go $REQUIRED_GO_VERSION installed successfully"
+fi
+
 # Check for environment file
 if [ ! -f ".env" ]; then
     if [ -f "env.example" ]; then
@@ -53,7 +80,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "📦 Downloading dependencies..."
-go mod download
+/usr/local/go/bin/go mod download
 if [ $? -ne 0 ]; then
     echo "❌ Failed to download dependencies"
     exit 1
@@ -63,7 +90,7 @@ echo "🧹 Cleaning up old builds..."
 rm -f saas-billing
 
 echo "🏗️ Building the application..."
-cd cmd/api && go build -o ../../saas-billing
+cd cmd/api && /usr/local/go/bin/go build -o ../../saas-billing
 if [ $? -ne 0 ]; then
     echo "❌ Build failed"
     cd ../..

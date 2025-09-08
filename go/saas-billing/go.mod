@@ -2,6 +2,8 @@ module github.com/yourusername/saas-billing
 
 go 1.21
 
+// This project requires Go 1.21 or later.
+
 require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-redis/redis/v8 v8.11.5
