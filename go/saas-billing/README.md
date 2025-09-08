@@ -43,60 +43,61 @@ This will:
 - Run database migrations
 - Create initial admin user
 
-## Manual Setup
+## Quick Start 🚀
 
 ### Prerequisites
+- Docker Desktop (Download from https://www.docker.com/products/docker-desktop)
+- Git (Download from https://git-scm.com/downloads)
+- Go (Download from https://golang.org/dl/)
 
-- Go 1.18+
-- Docker and Docker Compose
-- PostgreSQL 12+
-- Redis 6+ (optional)
+### Super Simple Setup ✨
 
-### Development Setup
-
-1. Clone and setup:
+1. Clone the project:
 ```bash
-# Clone repository
 git clone https://github.com/linkmeAman/go.git
 cd saas-billing
+```
 
-# Copy environment file
+2. Copy the environment file:
+```bash
 cp env.example .env
-
-# Install dependencies
-go mod download
 ```
 
-2. Start services:
+3. Run everything with ONE command:
 ```bash
-# Start PostgreSQL and Redis
-docker-compose up -d
-
-# Verify services are running
-docker-compose ps
+./run.sh
 ```
 
-3. Run migrations and start server:
+That's it! The script will:
+- 🐳 Start Docker services
+- 📦 Set up the database
+- 🏗️ Build the application
+- 🚀 Start the server
+
+When you see `"Server starting on :8080"`, the application is ready!
+
+### Quick Test 🧪
+
+1. Register a new user:
 ```bash
-# Create database and run migrations (if using Docker)
-docker exec -i $(docker-compose ps -q postgres) psql -U postgres -c "CREATE DATABASE saas_billing;"
-docker exec -i $(docker-compose ps -q postgres) psql -U postgres -d saas_billing -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
-docker exec -i $(docker-compose ps -q postgres) psql -U postgres -d saas_billing -f migrations/001_initial_schema.sql
+curl -X POST http://localhost:8080/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "password": "yourpassword123"}'
+```
 
-# OR if PostgreSQL is installed locally
-psql -U postgres -c "CREATE DATABASE saas_billing;"
-psql -U postgres -d saas_billing -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
-psql -U postgres -d saas_billing -f migrations/001_initial_schema.sql
+2. Login to get your token:
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "password": "yourpassword123"}'
+```
 
-# Build and run the server (recommended)
-make build   # Build the binary
-./saas-billing   # Run the server
-
-# Alternative: Run directly (for development)
-make run
-
-# One-command setup with Docker (recommended)
-make setup   # This will start Docker services and run migrations
+3. Create an organization (replace TOKEN with your token from login):
+```bash
+curl -X POST http://localhost:8080/api/v1/organizations \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "My Company"}'
 ```
 
 The API will be available at http://localhost:8080
