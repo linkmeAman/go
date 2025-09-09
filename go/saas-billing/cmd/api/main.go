@@ -7,12 +7,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/yourusername/saas-billing/internal/billing"
-	"github.com/yourusername/saas-billing/internal/db"
-	"github.com/yourusername/saas-billing/internal/middleware"
-	"github.com/yourusername/saas-billing/internal/orgs"
-	"github.com/yourusername/saas-billing/internal/types"
-	"github.com/yourusername/saas-billing/internal/users"
+	"github.com/linkmeAman/saas-billing/internal/billing"
+	"github.com/linkmeAman/saas-billing/internal/db"
+	"github.com/linkmeAman/saas-billing/internal/middleware"
+	"github.com/linkmeAman/saas-billing/internal/orgs"
+	"github.com/linkmeAman/saas-billing/internal/types"
+	"github.com/linkmeAman/saas-billing/internal/users"
 )
 
 type RegisterRequest struct {
@@ -55,10 +55,14 @@ func main() {
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
 		if err := database.Ping(); err != nil {
-			c.JSON(500, types.ApiResponse{Success: false, Error: "Database connection failed"})
+			c.JSON(http.StatusInternalServerError, types.NewErrorResponse(&types.ErrorInfo{
+				Code:       "DATABASE_ERROR",
+				Message:    "Database connection failed",
+				StatusCode: http.StatusInternalServerError,
+			}))
 			return
 		}
-		c.JSON(200, types.ApiResponse{Success: true, Data: gin.H{"status": "healthy"}})
+		c.JSON(http.StatusOK, types.NewSuccessResponse(gin.H{"status": "healthy"}, nil))
 	})
 
 	// Public routes
@@ -69,32 +73,50 @@ func main() {
 			auth.POST("/register", func(c *gin.Context) {
 				var req RegisterRequest
 				if err := c.ShouldBindJSON(&req); err != nil {
-					c.JSON(http.StatusBadRequest, types.ApiResponse{Success: false, Error: err.Error()})
+					c.JSON(http.StatusBadRequest, types.NewErrorResponse(&types.ErrorInfo{
+						Code:       "INVALID_REQUEST",
+						Message:    err.Error(),
+						StatusCode: http.StatusBadRequest,
+					}))
 					return
 				}
 
 				if err := userService.Register(req.Email, req.Password); err != nil {
-					c.JSON(http.StatusInternalServerError, types.ApiResponse{Success: false, Error: "Failed to register user"})
+					c.JSON(http.StatusInternalServerError, types.NewErrorResponse(&types.ErrorInfo{
+						Code:       "REGISTRATION_ERROR",
+						Message:    "Failed to register user",
+						Details:    err.Error(),
+						StatusCode: http.StatusInternalServerError,
+					}))
 					return
 				}
 
-				c.JSON(http.StatusCreated, types.ApiResponse{Success: true, Data: gin.H{"message": "User registered successfully"}})
+				c.JSON(http.StatusCreated, types.NewSuccessResponse(gin.H{"message": "User registered successfully"}, nil))
 			})
 
 			auth.POST("/login", func(c *gin.Context) {
 				var req LoginRequest
 				if err := c.ShouldBindJSON(&req); err != nil {
-					c.JSON(http.StatusBadRequest, types.ApiResponse{Success: false, Error: err.Error()})
+					c.JSON(http.StatusBadRequest, types.NewErrorResponse(&types.ErrorInfo{
+						Code:       "INVALID_REQUEST",
+						Message:    err.Error(),
+						StatusCode: http.StatusBadRequest,
+					}))
 					return
 				}
 
 				token, err := userService.Login(req.Email, req.Password)
 				if err != nil {
-					c.JSON(http.StatusUnauthorized, types.ApiResponse{Success: false, Error: "Invalid credentials"})
+					c.JSON(http.StatusUnauthorized, types.NewErrorResponse(&types.ErrorInfo{
+						Code:       "INVALID_CREDENTIALS",
+						Message:    "Invalid credentials",
+						Details:    err.Error(),
+						StatusCode: http.StatusUnauthorized,
+					}))
 					return
 				}
 
-				c.JSON(http.StatusOK, types.ApiResponse{Success: true, Data: gin.H{"token": token}})
+				c.JSON(http.StatusOK, types.NewSuccessResponse(gin.H{"token": token}, nil))
 			})
 		}
 
@@ -108,18 +130,27 @@ func main() {
 				orgs.POST("", func(c *gin.Context) {
 					var req CreateOrgRequest
 					if err := c.ShouldBindJSON(&req); err != nil {
-						c.JSON(http.StatusBadRequest, types.ApiResponse{Success: false, Error: err.Error()})
+						c.JSON(http.StatusBadRequest, types.NewErrorResponse(&types.ErrorInfo{
+							Code:       "INVALID_REQUEST",
+							Message:    err.Error(),
+							StatusCode: http.StatusBadRequest,
+						}))
 						return
 					}
 
 					userID := c.GetString("userID")
 					org, err := orgService.Create(req.Name, userID)
 					if err != nil {
-						c.JSON(http.StatusInternalServerError, types.ApiResponse{Success: false, Error: "Failed to create organization"})
+						c.JSON(http.StatusInternalServerError, types.NewErrorResponse(&types.ErrorInfo{
+							Code:       "ORGANIZATION_CREATE_ERROR",
+							Message:    "Failed to create organization",
+							Details:    err.Error(),
+							StatusCode: http.StatusInternalServerError,
+						}))
 						return
 					}
 
-					c.JSON(http.StatusCreated, types.ApiResponse{Success: true, Data: org})
+					c.JSON(http.StatusCreated, types.NewSuccessResponse(org, nil))
 				})
 
 				// List user's organizations
@@ -127,11 +158,16 @@ func main() {
 					userID := c.GetString("userID")
 					orgs, err := orgService.GetUserOrgs(userID)
 					if err != nil {
-						c.JSON(http.StatusInternalServerError, types.ApiResponse{Success: false, Error: "Failed to fetch organizations"})
+						c.JSON(http.StatusInternalServerError, types.NewErrorResponse(&types.ErrorInfo{
+							Code:       "ORGANIZATION_FETCH_ERROR",
+							Message:    "Failed to fetch organizations",
+							Details:    err.Error(),
+							StatusCode: http.StatusInternalServerError,
+						}))
 						return
 					}
 
-					c.JSON(http.StatusOK, types.ApiResponse{Success: true, Data: orgs})
+					c.JSON(http.StatusOK, types.NewSuccessResponse(orgs, nil))
 				})
 
 				// Organization-specific routes
@@ -141,17 +177,26 @@ func main() {
 					org.POST("/members", middleware.RequireRole(orgService, "owner", "admin"), func(c *gin.Context) {
 						var req AddMemberRequest
 						if err := c.ShouldBindJSON(&req); err != nil {
-							c.JSON(http.StatusBadRequest, types.ApiResponse{Success: false, Error: err.Error()})
+							c.JSON(http.StatusBadRequest, types.NewErrorResponse(&types.ErrorInfo{
+								Code:       "INVALID_REQUEST",
+								Message:    err.Error(),
+								StatusCode: http.StatusBadRequest,
+							}))
 							return
 						}
 
 						orgID := c.Param("orgID")
 						if err := orgService.AddMember(orgID, req.UserID, req.Role); err != nil {
-							c.JSON(http.StatusInternalServerError, types.ApiResponse{Success: false, Error: "Failed to add member"})
+							c.JSON(http.StatusInternalServerError, types.NewErrorResponse(&types.ErrorInfo{
+								Code:       "MEMBER_ADD_ERROR",
+								Message:    "Failed to add member",
+								Details:    err.Error(),
+								StatusCode: http.StatusInternalServerError,
+							}))
 							return
 						}
-
-						c.JSON(http.StatusOK, types.ApiResponse{Success: true, Data: gin.H{"message": "Member added successfully"}})
+						
+						c.JSON(http.StatusOK, types.NewSuccessResponse(gin.H{"message": "Member added successfully"}, nil))
 					})
 
 					// Billing routes
@@ -162,11 +207,16 @@ func main() {
 						billing.GET("/plans", func(c *gin.Context) {
 							plans, err := billingService.GetPlans()
 							if err != nil {
-								c.JSON(http.StatusInternalServerError, types.ApiResponse{Success: false, Error: "Failed to fetch plans"})
+								c.JSON(http.StatusInternalServerError, types.NewErrorResponse(&types.ErrorInfo{
+									Code:       "PLANS_FETCH_ERROR",
+									Message:    "Failed to fetch plans",
+									Details:    err.Error(),
+									StatusCode: http.StatusInternalServerError,
+								}))
 								return
 							}
 
-							c.JSON(http.StatusOK, types.ApiResponse{Success: true, Data: plans})
+							c.JSON(http.StatusOK, types.NewSuccessResponse(plans, nil))
 						})
 
 						// Subscribe to plan
@@ -176,11 +226,16 @@ func main() {
 
 							sub, err := billingService.CreateSubscription(orgID, planID)
 							if err != nil {
-								c.JSON(http.StatusInternalServerError, types.ApiResponse{Success: false, Error: "Failed to create subscription"})
+								c.JSON(http.StatusInternalServerError, types.NewErrorResponse(&types.ErrorInfo{
+									Code:       "SUBSCRIPTION_CREATE_ERROR",
+									Message:    "Failed to create subscription",
+									Details:    err.Error(),
+									StatusCode: http.StatusInternalServerError,
+								}))
 								return
 							}
 
-							c.JSON(http.StatusCreated, types.ApiResponse{Success: true, Data: sub})
+							c.JSON(http.StatusCreated, types.NewSuccessResponse(sub, nil))
 						})
 
 						// Get current subscription
@@ -188,16 +243,25 @@ func main() {
 							orgID := c.Param("orgID")
 							sub, err := billingService.GetOrgSubscription(orgID)
 							if err != nil {
-								c.JSON(http.StatusInternalServerError, types.ApiResponse{Success: false, Error: "Failed to fetch subscription"})
+								c.JSON(http.StatusInternalServerError, types.NewErrorResponse(&types.ErrorInfo{
+									Code:       "SUBSCRIPTION_FETCH_ERROR",
+									Message:    "Failed to fetch subscription",
+									Details:    err.Error(),
+									StatusCode: http.StatusInternalServerError,
+								}))
 								return
 							}
 
 							if sub == nil {
-								c.JSON(http.StatusNotFound, types.ApiResponse{Success: false, Error: "No active subscription found"})
+								c.JSON(http.StatusNotFound, types.NewErrorResponse(&types.ErrorInfo{
+									Code:       "SUBSCRIPTION_NOT_FOUND",
+									Message:    "No active subscription found",
+									StatusCode: http.StatusNotFound,
+								}))
 								return
 							}
 
-							c.JSON(http.StatusOK, types.ApiResponse{Success: true, Data: sub})
+							c.JSON(http.StatusOK, types.NewSuccessResponse(sub, nil))
 						})
 
 						// Get invoices
@@ -205,11 +269,16 @@ func main() {
 							orgID := c.Param("orgID")
 							invoices, err := billingService.GetInvoices(orgID)
 							if err != nil {
-								c.JSON(http.StatusInternalServerError, types.ApiResponse{Success: false, Error: "Failed to fetch invoices"})
+								c.JSON(http.StatusInternalServerError, types.NewErrorResponse(&types.ErrorInfo{
+									Code:       "INVOICES_FETCH_ERROR",
+									Message:    "Failed to fetch invoices",
+									Details:    err.Error(),
+									StatusCode: http.StatusInternalServerError,
+								}))
 								return
 							}
 
-							c.JSON(http.StatusOK, types.ApiResponse{Success: true, Data: invoices})
+							c.JSON(http.StatusOK, types.NewSuccessResponse(invoices, nil))
 						})
 					}
 				}

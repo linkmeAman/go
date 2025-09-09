@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
-	"github.com/yourusername/saas-billing/internal/types"
+	"github.com/linkmeAman/saas-billing/internal/types"
 )
 
 func RateLimit(redisClient *redis.Client, key string, limit int, window time.Duration) gin.HandlerFunc {
@@ -24,17 +24,22 @@ func RateLimit(redisClient *redis.Client, key string, limit int, window time.Dur
 		pipe.Expire(ctx, userKey, window)
 		cmds, err := pipe.Exec(ctx)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, types.ApiResponse{Success: false, Error: "Rate limit check failed"})
+			c.JSON(http.StatusInternalServerError, types.NewErrorResponse(&types.ErrorInfo{
+				Code:       "RATE_LIMIT_ERROR",
+				Message:    "Rate limit check failed",
+				StatusCode: http.StatusInternalServerError,
+			}))
 			c.Abort()
 			return
 		}
 
 		count := cmds[2].(*redis.IntCmd).Val()
 		if count > int64(limit) {
-			c.JSON(http.StatusTooManyRequests, types.ApiResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Rate limit exceeded. Try again in %v", window),
-			})
+			c.JSON(http.StatusTooManyRequests, types.NewErrorResponse(&types.ErrorInfo{
+				Code:       "RATE_LIMIT_EXCEEDED",
+				Message:    fmt.Sprintf("Rate limit exceeded. Try again in %v", window),
+				StatusCode: http.StatusTooManyRequests,
+			}))
 			c.Abort()
 			return
 		}

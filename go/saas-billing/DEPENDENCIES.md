@@ -123,7 +123,7 @@ If you need to manually install the project on a new machine:
 
 2. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/saas-billing.git
+   git clone https://github.com/linkmeAman/saas-billing.git
    cd saas-billing
    ```
 

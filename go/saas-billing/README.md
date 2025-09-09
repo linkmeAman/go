@@ -28,7 +28,7 @@ The easiest way to get started is using our setup script:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/saas-billing.git
+git clone https://github.com/linkmeAman/saas-billing.git
 cd saas-billing
 
 # Run the setup script

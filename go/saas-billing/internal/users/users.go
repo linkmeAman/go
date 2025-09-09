@@ -3,7 +3,7 @@ package users
 import (
 	"database/sql"
 
-	"github.com/yourusername/saas-billing/internal/auth"
+	"github.com/linkmeAman/saas-billing/internal/auth"
 )
 
 type User struct {

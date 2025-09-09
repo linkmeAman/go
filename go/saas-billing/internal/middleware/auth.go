@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/saas-billing/internal/auth"
+	"github.com/linkmeAman/saas-billing/internal/auth"
 )
 
 // AuthRequired verifies JWT token and adds claims to context

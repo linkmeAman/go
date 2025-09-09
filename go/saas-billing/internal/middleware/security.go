@@ -1,12 +1,13 @@
 package middleware
 
 import (
+	"github.com/linkmeAman/saas-billing/internal/utils"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/saas-billing/internal/logger"
-	"github.com/yourusername/saas-billing/internal/types"
+	"github.com/linkmeAman/saas-billing/internal/logger"
+	"github.com/linkmeAman/saas-billing/internal/types"
 )
 
 // Security headers middleware
@@ -29,7 +30,7 @@ func RequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestID := c.GetHeader("X-Request-ID")
 		if requestID == "" {
-			requestID = generateRequestID()
+			requestID = utils.GenerateRequestID()
 		}
 		
 		c.Set("request_id", requestID)
@@ -43,9 +44,6 @@ func RequestID() gin.HandlerFunc {
 func RateLimiter() gin.HandlerFunc {
 	// Implementation using Redis
 	return func(c *gin.Context) {
-		// Get client IP
-		clientIP := c.ClientIP()
-		
 		// Check rate limit in Redis
 		// ... Redis implementation ...
 		

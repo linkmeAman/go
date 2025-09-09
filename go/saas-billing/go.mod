@@ -1,6 +1,6 @@
-module github.com/yourusername/saas-billing
+module github.com/linkmeAman/saas-billing
 
-go 1.21
+go 1.21.0
 
 // This project requires Go 1.21 or later.
 
@@ -32,7 +32,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rogpeppe/go-internal v1.14.1 // indirect
+	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	golang.org/x/net v0.3.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect

@@ -11,9 +11,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/yourusername/saas-billing/internal/auth"
-	"github.com/yourusername/saas-billing/internal/db"
-	"github.com/yourusername/saas-billing/internal/types"
+	"github.com/linkmeAman/saas-billing/internal/auth"
+	"github.com/linkmeAman/saas-billing/internal/db"
+	"github.com/linkmeAman/saas-billing/internal/types"
 )
 
 var (
